@@ -7,6 +7,7 @@
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0f172a; color: #f8fafc; text-align: center; margin: 0; padding: 20px; }
+        
         h1 { color: #f8fafc; margin-bottom: 4px; font-size: 26px; font-weight: 800; }
         .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 25px; }
         
@@ -23,7 +24,17 @@
         
         .status-text { font-size: 15px; margin-top: 6px; font-weight: 800; letter-spacing: 0.5px; }
         .spot-num { font-size: 12px; opacity: 0.85; text-transform: uppercase; }
-        
+
+        .info-row { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 12px 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #334155; }
+        .info-label { color: #94a3b8; font-size: 14px; }
+        .info-val { font-size: 16px; font-weight: 700; color: #38bdf8; }
+        .gate-open { color: #22c55e; }
+        .gate-closed { color: #f59e0b; }
+
+        .btn-open { width: 100%; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-open:active { transform: scale(0.98); }
+        .btn-open:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; }
+
         .footer { margin-top: 30px; font-size: 12px; color: #64748b; }
     </style>
 </head>
@@ -68,13 +79,31 @@
         </div>
     </div>
 
+    <!-- Блок управления и климата -->
+    <div class="tier">
+        <div class="tier-header">
+            <span class="tier-title">Управление и Климат</span>
+        </div>
+        
+        <div class="info-row">
+            <span class="info-label">Температура воздуха:</span>
+            <span class="info-val" id="temp-val">-- °C</span>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">Состояние шлагбаума:</span>
+            <span class="info-val gate-closed" id="gate-status">ЗАКРЫТ</span>
+        </div>
+
+        <button class="btn-open" id="open-btn" onclick="openGate()">ОТКРЫТЬ ШЛАГБАУМ</button>
+    </div>
+
     <div class="footer">Обновление данных каждые 2 секунды</div>
 
     <script>
-        // Твой Auth Token из прошивки
         const BLYNK_TOKEN = "B6DQDkIRoN8rySG9qxS9eVgFzcnsKpSU";
+        const BASE_URL = "https://blynk.cloud/external/api";
 
-        // Маппинг мест и пинов
         const SPOTS = [
             { id: 1, pin: "V1" },
             { id: 2, pin: "V2" },
@@ -83,16 +112,14 @@
         ];
 
         async function updateData() {
-            // 1. Обновляем статус отдельных мест (V1 - V4)
             for (const spot of SPOTS) {
                 try {
-                    const res = await fetch(`https://blynk.cloud/external/api/get?token=${BLYNK_TOKEN}&${spot.pin}`);
+                    const res = await fetch(`${BASE_URL}/get?token=${BLYNK_TOKEN}&${spot.pin}`);
                     const val = await res.text();
-                    
+
                     const spotEl = document.getElementById(`spot${spot.id}`);
                     const textEl = document.getElementById(`st${spot.id}`);
-                    
-                    // Проверяем текст из твоего кода ("Занято" / "Свободно")
+
                     if (val.includes("Занято")) {
                         spotEl.className = "spot occupied";
                         textEl.innerText = "ЗАНЯТО";
@@ -105,21 +132,56 @@
                 }
             }
 
-            // 2. Обновляем общие счетчики свободного места (V5 - 1 ярус, V6 - 2 ярус)
             try {
-                const resV5 = await fetch(`https://blynk.cloud/external/api/get?token=${BLYNK_TOKEN}&V5`);
+                const resV5 = await fetch(`${BASE_URL}/get?token=${BLYNK_TOKEN}&V5`);
                 const freeV5 = await resV5.text();
                 document.getElementById("count-floor1").innerText = `Свободно: ${freeV5.trim()}`;
 
-                const resV6 = await fetch(`https://blynk.cloud/external/api/get?token=${BLYNK_TOKEN}&V6`);
+                const resV6 = await fetch(`${BASE_URL}/get?token=${BLYNK_TOKEN}&V6`);
                 const freeV6 = await resV6.text();
                 document.getElementById("count-floor2").innerText = `Свободно: ${freeV6.trim()}`;
+
+                const resV7 = await fetch(`${BASE_URL}/get?token=${BLYNK_TOKEN}&V7`);
+                const tempV7 = await resV7.text();
+                if (tempV7 && !tempV7.includes("Error")) {
+                    document.getElementById("temp-val").innerText = `${parseFloat(tempV7).toFixed(1)} °C`;
+                }
+
+                const resV10 = await fetch(`${BASE_URL}/get?token=${BLYNK_TOKEN}&V10`);
+                const gateV10 = await resV10.text();
+                const gateEl = document.getElementById("gate-status");
+                if (gateV10.trim() == "1") {
+                    gateEl.innerText = "ОТКРЫТ";
+                    gateEl.className = "info-val gate-open";
+                } else {
+                    gateEl.innerText = "ЗАКРЫТ";
+                    gateEl.className = "info-val gate-closed";
+                }
+
             } catch (e) {
-                console.error("Ошибка получения счетчиков:", e);
+                console.error("Ошибка получения счетчиков или климата:", e);
             }
         }
 
-        // Автообновление каждые 2 секунды
+        async function openGate() {
+            const btn = document.getElementById("open-btn");
+            btn.disabled = true;
+            btn.innerText = "ОТПРАВКА...";
+
+            try {
+                await fetch(`${BASE_URL}/update?token=${TOKEN}&v9=1`);
+                setTimeout(async () => {
+                    await fetch(`${BASE_URL}/update?token=${TOKEN}&v9=0`);
+                    btn.disabled = false;
+                    btn.innerText = "ОТКРЫТЬ ШЛАГБАУМ";
+                }, 1000);
+            } catch (e) {
+                alert("Не удалось отправить сигнал");
+                btn.disabled = false;
+                btn.innerText = "ОТКРЫТЬ ШЛАГБАУМ";
+            }
+        }
+
         updateData();
         setInterval(updateData, 2000);
     </script>
