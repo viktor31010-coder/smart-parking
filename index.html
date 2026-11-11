@@ -91,6 +91,11 @@
         </div>
 
         <div class="info-row">
+            <span class="info-label">Влажность воздуха:</span>
+            <span class="info-val" id="humidity-val">-- %</span>
+        </div>
+
+        <div class="info-row">
             <span class="info-label">Состояние шлагбаума:</span>
             <span class="info-val gate-closed" id="gate-status">ЗАКРЫТ</span>
         </div>
@@ -141,12 +146,21 @@
                 const freeV6 = await resV6.text();
                 document.getElementById("count-floor2").innerText = `Свободно: ${freeV6.trim()}`;
 
+                // Температура (V7)
                 const resV7 = await fetch(`${BASE_URL}/get?token=${BLYNK_TOKEN}&V7`);
                 const tempV7 = await resV7.text();
                 if (tempV7 && !tempV7.includes("Error")) {
                     document.getElementById("temp-val").innerText = `${parseFloat(tempV7).toFixed(1)} °C`;
                 }
 
+                // Влажность (V8)
+                const resV8 = await fetch(`${BASE_URL}/get?token=${BLYNK_TOKEN}&V8`);
+                const humV8 = await resV8.text();
+                if (humV8 && !humV8.includes("Error")) {
+                    document.getElementById("humidity-val").innerText = `${parseFloat(humV8).toFixed(1)} %`;
+                }
+
+                // Статус шлагбаума (V10)
                 const resV10 = await fetch(`${BASE_URL}/get?token=${BLYNK_TOKEN}&V10`);
                 const gateV10 = await resV10.text();
                 const gateEl = document.getElementById("gate-status");
@@ -159,7 +173,7 @@
                 }
 
             } catch (e) {
-                console.error("Ошибка получения счетчиков или климата:", e);
+                console.error("Ошибка получения данных климата или счетчиков:", e);
             }
         }
 
@@ -169,9 +183,9 @@
             btn.innerText = "ОТПРАВКА...";
 
             try {
-                await fetch(`${BASE_URL}/update?token=${TOKEN}&v9=1`);
+                await fetch(`${BASE_URL}/update?token=${BLYNK_TOKEN}&v9=1`);
                 setTimeout(async () => {
-                    await fetch(`${BASE_URL}/update?token=${TOKEN}&v9=0`);
+                    await fetch(`${BASE_URL}/update?token=${BLYNK_TOKEN}&v9=0`);
                     btn.disabled = false;
                     btn.innerText = "ОТКРЫТЬ ШЛАГБАУМ";
                 }, 1000);
