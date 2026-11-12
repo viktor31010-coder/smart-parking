@@ -51,11 +51,11 @@
         </div>
         <div class="grid">
             <div id="spot3" class="spot">
-                <div class="spot-num">Зона 3</div>
+                <div class="spot-num">Место 3</div>
                 <div class="status-text" id="st3">Загрузка...</div>
             </div>
             <div id="spot4" class="spot">
-                <div class="spot-num">Зона 4</div>
+                <div class="spot-num">Место 4</div>
                 <div class="status-text" id="st4">Загрузка...</div>
             </div>
         </div>
@@ -69,11 +69,11 @@
         </div>
         <div class="grid">
             <div id="spot1" class="spot">
-                <div class="spot-num">Зона 1</div>
+                <div class="spot-num">Место 1</div>
                 <div class="status-text" id="st1">Загрузка...</div>
             </div>
             <div id="spot2" class="spot">
-                <div class="spot-num">Зона 2</div>
+                <div class="spot-num">Место 2</div>
                 <div class="status-text" id="st2">Загрузка...</div>
             </div>
         </div>
@@ -146,34 +146,20 @@
                 const freeV6 = await resV6.text();
                 document.getElementById("count-floor2").innerText = `Свободно: ${freeV6.trim()}`;
 
-                // Температура (V7)
                 const resV7 = await fetch(`${BASE_URL}/get?token=${BLYNK_TOKEN}&V7`);
                 const tempV7 = await resV7.text();
                 if (tempV7 && !tempV7.includes("Error")) {
                     document.getElementById("temp-val").innerText = `${parseFloat(tempV7).toFixed(1)} °C`;
                 }
 
-                // Влажность (V8)
                 const resV8 = await fetch(`${BASE_URL}/get?token=${BLYNK_TOKEN}&V8`);
                 const humV8 = await resV8.text();
                 if (humV8 && !humV8.includes("Error")) {
                     document.getElementById("humidity-val").innerText = `${parseFloat(humV8).toFixed(1)} %`;
                 }
 
-                // Статус шлагбаума (V10)
-                const resV10 = await fetch(`${BASE_URL}/get?token=${BLYNK_TOKEN}&V10`);
-                const gateV10 = await resV10.text();
-                const gateEl = document.getElementById("gate-status");
-                if (gateV10.trim() == "1") {
-                    gateEl.innerText = "ОТКРЫТ";
-                    gateEl.className = "info-val gate-open";
-                } else {
-                    gateEl.innerText = "ЗАКРЫТ";
-                    gateEl.className = "info-val gate-closed";
-                }
-
             } catch (e) {
-                console.error("Ошибка получения данных климата или счетчиков:", e);
+                console.error("Ошибка получения счетчиков или климата:", e);
             }
         }
 
