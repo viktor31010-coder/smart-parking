@@ -28,8 +28,6 @@
         .info-row { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 12px 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #334155; }
         .info-label { color: #94a3b8; font-size: 14px; }
         .info-val { font-size: 16px; font-weight: 700; color: #38bdf8; }
-        .gate-open { color: #22c55e; }
-        .gate-closed { color: #f59e0b; }
 
         .btn-open { width: 100%; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; }
         .btn-open:active { transform: scale(0.98); }
@@ -93,11 +91,6 @@
         <div class="info-row">
             <span class="info-label">Влажность воздуха:</span>
             <span class="info-val" id="humidity-val">-- %</span>
-        </div>
-
-        <div class="info-row">
-            <span class="info-label">Состояние шлагбаума:</span>
-            <span class="info-val gate-closed" id="gate-status">ЗАКРЫТ</span>
         </div>
 
         <button class="btn-open" id="open-btn" onclick="openGate()">ОТКРЫТЬ ШЛАГБАУМ</button>
